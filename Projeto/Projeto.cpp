@@ -16,13 +16,14 @@
 
 //------------------------------------------------------------ Sistema Coordenadas 
 GLint		wScreen = 800, hScreen = 600;		//.. janela - pixeis
-GLfloat		SIZE = 10.0;	//.. Mundo  SIZE=coordenadas x=y=z
+GLfloat		SIZE = 40.0;	//.. Mundo  SIZE=coordenadas x=y=z
 
 //===========================================================Variaveis e constantes
 
 //============================================================= Observador
 GLfloat  rVisao = 20, aVisao = -0.5 * PI, incVisao = 1;
 GLfloat  obsP[] = { rVisao * cos(aVisao), 2.0, rVisao * sin(aVisao) };
+//GLfloat  obsP[] = { -20 , 10.0, 0 };
 float	 anguloZ = 35;
 
 
@@ -35,6 +36,10 @@ GLfloat pos[] = { 0., 0., 0. };
 GLfloat ywindow = 4;
 GLfloat angtap = 0;
 GLint light = 1;
+GLint rotrodas = 10;
+
+GLfloat Matriz[4][4];
+
 //==================================================================== VERTEX ARAY
 //------------------------------------------- coordenadas + normais + cores
 GLfloat tam = 1;
@@ -152,6 +157,35 @@ void drawcubo() {
 
 }
 
+void drawjante() {
+	glPushMatrix();
+		
+		glPushMatrix();
+		glRotatef(rotrodas, 0, 0, 1);
+		glScalef(1, 0.1, 0.1);
+		drawcubo();
+		glPopMatrix();
+
+		glPushMatrix();
+		glRotatef(rotrodas+45, 0, 0, 1);
+		glScalef(1, 0.1, 0.1);
+		drawcubo();
+		glPopMatrix();
+
+		glPushMatrix();
+		glRotatef(rotrodas + 90, 0, 0, 1);
+		glScalef(1, 0.1, 0.1);
+		drawcubo();
+		glPopMatrix();
+
+		glPushMatrix();
+		glRotatef(rotrodas + 135, 0, 0, 1);
+		glScalef(1, 0.1, 0.1);
+		drawcubo();
+		glPopMatrix();
+
+	glPopMatrix();
+}
 void drawcar() {
 	glPushMatrix();
 		glEnable(GL_BLEND);
@@ -161,7 +195,7 @@ void drawcar() {
 		glRotatef(theta, 0, 1, 0);
 		
 		//base da pickup
-		glColor3f(1, 1, 1);
+		glColor3f(0.0745, 0.3176, 0.8471);
 		glPushMatrix();
 			glScalef(8, 2, 4);
 			drawcubo();
@@ -204,7 +238,7 @@ void drawcar() {
 
 
 		//habitaculo
-		glColor3f(0, 1, 0);
+		glColor3f(0.0745, 0.3176, 0.8471);
 		glPushMatrix();
 			glTranslatef(-0.5, 4, 0);
 
@@ -214,7 +248,7 @@ void drawcar() {
 		glPopMatrix();
 
 		//cabine vidro DIR
-		glColor4f(0, 0, 0, 0.5);
+		glColor4f(0, 0, 0, 0.6);
 		glPushMatrix();
 			glTranslatef(3, ywindow, 3.98); 
 			glRotatef(90, 0, 1, 0);
@@ -223,7 +257,7 @@ void drawcar() {
 			drawcabine();
 		glPopMatrix();
 		//cabine vidro ESQ
-		glColor4f(0, 0, 0, 0.5);
+		glColor4f(0, 0, 0, 0.6);
 		glPushMatrix();
 			glTranslatef(3, ywindow, -3.98);
 			glRotatef(90, 0, 1, 0);
@@ -257,7 +291,7 @@ void drawcar() {
 		glPushMatrix();
 		glTranslatef(3, 4,0);
 			glRotatef(45, 0, 0, 1);
-			glScalef(0.01, 2.84, 4);
+			glScalef(0.01, 2.84, 3.99);
 
 			drawcubo();
 		glPopMatrix();
@@ -295,6 +329,43 @@ void drawcar() {
 			glScalef(0.1, 1, 4);
 			drawcubo();
 		glPopMatrix();
+
+		//rodas dir frente
+		glColor3f(0, 0, 0);
+		glPushMatrix();
+		glTranslatef(5.5, -2, 4.7);
+		glRotatef(rotrodas, 0, 0, 1);
+		drawjante();
+		glutSolidTorus(0.7, 1.5, 15, 15);
+		glPopMatrix();
+
+		//rodas esq frente
+		glColor3f(0, 0, 0);
+		glPushMatrix();
+		glTranslatef(5.5, -2, -4.7);
+		glRotatef(rotrodas, 0, 0, 1);
+		drawjante();
+		glutSolidTorus(0.7, 1.5, 15, 15);
+		glPopMatrix();
+
+		//rodas esq tras
+		glColor3f(0, 0, 0);
+		glPushMatrix();
+		glTranslatef(-5.5, -2, -4.7);
+		glRotatef(rotrodas, 0, 0, 1);
+		drawjante();
+		glutSolidTorus(0.7, 1.5, 15, 15);//glutWireTorus(0.5, 1.5, 15, 15);
+		glPopMatrix();
+
+		//rodas dir tras
+		glColor3f(0, 0, 0);
+		glPushMatrix();
+		glTranslatef(-5.5, -2, 4.7);
+		glRotatef(rotrodas, 0, 0, 1);
+		drawjante();
+		glutSolidTorus(0.7, 1.5, 15, 15);
+		glPopMatrix();
+		glGetFloatv(GL_MODELVIEW_MATRIX, &Matriz[0][0]);
 		glDisable(GL_BLEND);
 	glPopMatrix();
 }
@@ -304,6 +375,19 @@ void display(void) {
 
 	//================================================================= APaga 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//<><><><><><><><><><><><><> Viewport 1 - MAPA   ???
+	glViewport(0, 0, 0.30 * wScreen, 0.30 * hScreen);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-20, 20, -20, 20, -20, 20);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	gluLookAt(pos[0], pos[1] + 5, pos[2], pos[0], pos[1], pos[2], 0, 0, 1);
+	drawEixos();
+	drawcar();
+	//=======================================================
+
 
 
 	//================================================================= Viewport 2
@@ -317,7 +401,8 @@ void display(void) {
 
 	//======================================================
 	//  <><><><><><><>         OBSERVADOR NAO EST� FIXO ????
-	gluLookAt(obsP[0], obsP[1], obsP[2], 0, 0, 0, 0, 1, 0);
+	//gluLookAt(obsP[0], obsP[1], obsP[2], pos[0], pos[1], pos[2], 0, 1, 0);
+	gluLookAt(obsP[0], obsP[1], obsP[2], 0,0,0, 0, 1, 0);
 	//======================================================
 
 
@@ -325,7 +410,7 @@ void display(void) {
 	drawEixos();
 
 	drawcar();
-
+	//drawjante();
 	/*drawScene();*/
 
 
@@ -356,12 +441,26 @@ void keyboard(unsigned char key, int x, int y) {
 	case 'S': case 's':
 		pos[0] = pos[0] - vel * cos(theta * PI / 180.);
 		pos[2] = pos[2] + vel * sin(theta * PI / 180.);
+		if (rotrodas < 360) {
+			rotrodas += 10;
+		}
+		else {
+			rotrodas = 0;
+		}
+		printf("coordenadas : %f,%f,%f\n", Matriz[3][0], Matriz[3][1], Matriz[3][2]);
 		glutPostRedisplay();
 		break;
 		//------------------------------ rotacao	
 	case 'W': case 'w':
 		pos[0] = pos[0] + vel * cos(theta * PI / 180.);
 		pos[2] = pos[2] - vel * sin(theta * PI / 180.);
+		if (rotrodas > 0) {
+			rotrodas -= 10;
+		}
+		else {
+			rotrodas = 350;
+		}
+		printf("coordenadas : %f,%f,%f\n", Matriz[3][0], Matriz[3][1], Matriz[3][2]);
 		glutPostRedisplay();
 		break;
 	case 'M':case 'm':
@@ -440,14 +539,13 @@ int main(int argc, char** argv) {
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	glutInitWindowSize(wScreen, hScreen);
 	glutInitWindowPosition(400, 100);
-	glutCreateWindow("efigueiredo@student.dei.uc.pt  ------  |Observador:'SETAS'|  |carro- �r�, 'w/s' 'a/d'  ");
+	glutCreateWindow("efigueiredo@student.dei.uc.pt  ------  |Observador:'SETAS'|  |carro- �r�, 'w/s' 'a/d'| |vidros 'm/k'| |mala 'n/j'| ");
 
 	initialize();
 
 	glutSpecialFunc(teclasNotAscii);
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
-
 	glutMainLoop();
 
 	return 0;
