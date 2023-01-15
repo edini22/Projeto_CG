@@ -1,4 +1,9 @@
-﻿#include <stdlib.h>
+﻿//===============================================
+//Eduardo Figueiredo n-2020213717 
+//===============================================
+
+#include "RgbImage.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <GL/glut.h>
@@ -17,6 +22,8 @@
 //------------------------------------------------------------ Sistema Coordenadas 
 GLint		wScreen = 800, hScreen = 600;		//.. janela - pixeis
 GLfloat		SIZE = 40.0;	//.. Mundo  SIZE=coordenadas x=y=z
+GLfloat     xC = 40.0, yC = 40.0, zC = 40.0;
+
 
 //===========================================================Variaveis e constantes
 
@@ -38,18 +45,148 @@ GLfloat angtap = 0;
 GLint light = 1;
 GLint rotrodas = 10;
 
+//============================================================== Texturas
+GLUquadricObj* esfera = gluNewQuadric();
+GLuint   texture[5];
+RgbImage imag;
+
 GLfloat Matriz[4][4];
+
+//------------------------------------------------- Propriedades Materiais
+void initMaterials(int material);
+char Materiais[18][30] = {
+	"Esmerald",  "Jade",  "obsidian",    "Pearl",        "Ruby",
+	"Turquoise", "Brass", "Bronze",      "Chrome",       "Copper",
+	"Gold",      "Silver","blackPlastic","cyankPlastic", "greenPlastic",
+	"redPlastic", "whitePlastic","yellowPlastic" };
+
+//=========================================== Objecto
+GLint     material = 10;
+
+//---------------------------------------------------- AMBIENTE - fixa
+GLint   Dia = 0;     //:::   'D'  
+GLfloat intensidadeDia = 0.0;
+GLfloat luzGlobalCorAmb[4] = { intensidadeDia, intensidadeDia,intensidadeDia, 1.0 };   // 
+
+//---------------------------------------------------- Luz pontual no TETO (eixo Y)
+GLint   ligaTeto = 1;		 //:::   'T'  
+GLfloat intensidadeT = 0.3;  //:::   'I'  
+GLint   luzR = 1;		 	 //:::   'R'  
+GLint   luzG = 1;			 //:::   'G'  
+GLint   luzB = 1;			 //:::   'B'  
+GLfloat localPos[4] = { 0.0, 5.0, 0.0, 1.0 };
+GLfloat localCorAmb[4] = { 0, 0, 0, 0.0 };
+GLfloat localCorDif[4] = { luzR, luzG, luzB, 1.0 };
+GLfloat localCorEsp[4] = { luzR, luzG, luzB, 1.0 };
 
 //==================================================================== VERTEX ARAY
 //------------------------------------------- coordenadas + normais + cores
 GLfloat tam = 1;
 
+void initTexturas()
+{
+
+	//----------------------------------------- Esfera - skybox envolvente
+	glGenTextures(1, &texture[0]);
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
+	imag.LoadBmpFile("sky.bmp");
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3,
+		imag.GetNumCols(),
+		imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
+		imag.ImageData());
+
+	//-----------------------------------------  asfalto
+	glGenTextures(1, &texture[1]);
+	glBindTexture(GL_TEXTURE_2D, texture[1]);
+	imag.LoadBmpFile("black-road-texture.bmp");
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3,
+		imag.GetNumCols(),
+		imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
+		imag.ImageData());
+	//-----------------------------------------  madeira
+	glGenTextures(1, &texture[2]);
+	glBindTexture(GL_TEXTURE_2D, texture[2]);
+	imag.LoadBmpFile("brown-wooden-flooring.bmp");
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3,
+		imag.GetNumCols(),
+		imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
+		imag.ImageData());
+
+	//-----------------------------------------  lateral carro 
+	glGenTextures(1, &texture[3]);
+	glBindTexture(GL_TEXTURE_2D, texture[3]);
+	imag.LoadBmpFile("pintura_azul_chama.bmp");
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3,
+		imag.GetNumCols(),
+		imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
+		imag.ImageData());
+
+	//-----------------------------------------  cima/baixo carro 
+	glGenTextures(1, &texture[4]);
+	glBindTexture(GL_TEXTURE_2D, texture[4]);
+	imag.LoadBmpFile("blue-concrete-textured-wall.bmp");
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3,
+		imag.GetNumCols(),
+		imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
+		imag.ImageData());
+	
+
+}
+
+//…………………………………………………………………………………………………………………………………………… LUZES
+void initLights(void) {
+	//…………………………………………………………………………………………………………………………………………… Ambiente
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, luzGlobalCorAmb);
+
+	//…………………………………………………………………………………………………………………………………………… Teto
+	glLightfv(GL_LIGHT0, GL_POSITION, localPos);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, localCorAmb);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, localCorDif);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, localCorEsp);
+}
+
 
 void initialize(void)
 {
-	glClearColor(GRAY);		//������������������������������Apagar
-	glEnable(GL_DEPTH_TEST);	//������������������������������Profundidade
+	glClearColor(WHITE);		//������������������������������Apagar
 	glShadeModel(GL_SMOOTH);	//������������������������������Interpolacao de cores
+	initTexturas();
+	glEnable(GL_DEPTH_TEST);	//������������������������������Profundidade
+
+	glEnable(GL_NORMALIZE);
+
+	////…………………………………………………………………………………………………………………………… ILUMINACAO / MAteriais
+	//glEnable(GL_LIGHTING);
+	//glEnable(GL_LIGHT0);
+
+	//initLights();
+	//initMaterials(10);   // gold
+
 
 	glEnable(GL_CULL_FACE);		//������������������������������Faces visiveis
 	glCullFace(GL_BACK);		//������������������������������Mostrar so as da frente
@@ -76,6 +213,46 @@ void drawEixos()
 	glVertex3f(0, 0, 0.5 * SIZE);
 	glEnd();
 
+}
+
+void iluminacao() {
+	glLightfv(GL_LIGHT0, GL_POSITION, localPos);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, localCorAmb);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, localCorDif);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, localCorEsp);
+	glEnable(GL_LIGHT0);
+}
+
+void drawChao() {
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Chao y=0
+	initMaterials(material);
+	glPushMatrix();
+	glNormal3f(0, 1, 0);   // virado para cima
+
+	glBegin(GL_QUADS);
+	glVertex3i(-xC, 0, xC); //A
+	glVertex3i(xC, 0, xC);  //B
+	glVertex3i(xC, 0, -xC); //C
+	glVertex3i(-xC, 0, -xC); //D
+	glEnd();
+	glPopMatrix();
+
+}
+
+void drawEsfera()
+{
+	//------------------------- Esfera
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
+	glPushMatrix();
+	//glTranslatef(2, 4, 2);
+	glRotatef(-90, 1, 0, 0);
+	gluQuadricDrawStyle(esfera, GLU_FILL);
+	gluQuadricNormals(esfera, GLU_SMOOTH);
+	gluQuadricTexture(esfera, GL_TRUE);
+	gluSphere(esfera, 60.0, 100, 100);
+	glPopMatrix();
+	glDisable(GL_TEXTURE_2D);
 }
 
 void drawcabine() {
@@ -157,6 +334,80 @@ void drawcubo() {
 
 }
 
+void drawcubotexturas(int tex) {
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, texture[tex]);
+
+	//esquerda
+	glBegin(GL_QUADS);
+	glTexCoord2f(1.0f, 0.0f);
+	glVertex3f(-tam, -tam, tam);//0
+	glTexCoord2f(1.0f, 1.0f);
+	glVertex3f(-tam, tam, tam);//1
+	glTexCoord2f(0.0f, 1.0f);
+	glVertex3f(-tam, tam, -tam);//2
+	glTexCoord2f(0.0f, 0.0f);
+	glVertex3f(-tam, -tam, -tam);//3
+	glEnd();
+	//cima
+	glBegin(GL_QUADS);
+	glTexCoord2f(1.0f, 0.0f);
+	glVertex3f(tam, tam, tam);//5
+	glTexCoord2f(1.0f, 1.0f);
+	glVertex3f(tam, tam, -tam);//6
+	glTexCoord2f(0.0f, 1.0f);
+	glVertex3f(-tam, tam, -tam);//2
+	glTexCoord2f(0.0f, 0.0f);
+	glVertex3f(-tam, tam, tam);//1
+	glEnd();
+	//direita
+	glBegin(GL_QUADS);
+	glTexCoord2f(1.0f, 0.0f);
+	glVertex3f(tam, -tam, -tam);//7
+	glTexCoord2f(1.0f, 1.0f);
+	glVertex3f(tam, tam, -tam);//6
+	glTexCoord2f(0.0f, 1.0f);
+	glVertex3f(tam, tam, tam);//5
+	glTexCoord2f(0.0f, 0.0f);
+	glVertex3f(tam, -tam, tam);//4
+	glEnd();
+	//baixo
+	glBegin(GL_QUADS);
+	glTexCoord2f(1.0f, 0.0f);
+	glVertex3f(-tam, -tam, -tam);//3
+	glTexCoord2f(1.0f, 1.0f);
+	glVertex3f(tam, -tam, -tam);//7
+	glTexCoord2f(0.0f, 1.0f);
+	glVertex3f(tam, -tam, tam);//4
+	glTexCoord2f(0.0f, 0.0f);
+	glVertex3f(-tam, -tam, tam);//0
+	glEnd();
+	//tras
+	glBegin(GL_QUADS);
+	glTexCoord2f(1.0f, 1.0f);
+	glVertex3f(-tam, tam, -tam);//2
+	glTexCoord2f(0.0f, 1.0f);
+	glVertex3f(tam, tam, -tam);//6
+	glTexCoord2f(0.0f, 0.0f);
+	glVertex3f(tam, -tam, -tam);//7
+	glTexCoord2f(1.0f, 0.0f);
+	glVertex3f(-tam, -tam, -tam);//3
+	glEnd();
+	//frente
+	glBegin(GL_QUADS);
+	glTexCoord2f(1.0f, 0.0f);
+	glVertex3f(tam, -tam, tam);//4
+	glTexCoord2f(1.0f, 1.0f);
+	glVertex3f(tam, tam, tam);//5
+	glTexCoord2f(0.0f, 1.0f);
+	glVertex3f(-tam, tam, tam);//1
+	glTexCoord2f(0.0f, 0.0f);
+	glVertex3f(-tam, -tam, tam);//0
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
+
+}
+
 void drawjante() {
 	glPushMatrix();
 		
@@ -186,6 +437,7 @@ void drawjante() {
 
 	glPopMatrix();
 }
+
 void drawcar() {
 	glPushMatrix();
 		glEnable(GL_BLEND);
@@ -198,7 +450,7 @@ void drawcar() {
 		glColor3f(0.0745, 0.3176, 0.8471);
 		glPushMatrix();
 			glScalef(8, 2, 4);
-			drawcubo();
+			drawcubotexturas(3);
 		glPopMatrix();
 
 		if(light){
@@ -244,7 +496,7 @@ void drawcar() {
 
 			glScalef(1.5,2,4);
 
-			drawcubo();
+			drawcubotexturas(4);
 		glPopMatrix();
 
 		//cabine vidro DIR
@@ -304,18 +556,16 @@ void drawcar() {
 			glTranslatef(-5, 3, 3.95);
 			glRotatef(90, 0, 1, 0);
 			glScalef(0.1, 1, 3);
-
-			drawcubo();
+			drawcubotexturas(2);
 		glPopMatrix();
 
 		//mala lateral esq 
 		glColor3f(0.6, 0.3, 0);
 		glPushMatrix();
-		glTranslatef(-5, 3, -3.95);
-		glRotatef(90, 0, 1, 0);
-		glScalef(0.1, 1, 3);
-
-		drawcubo();
+			glTranslatef(-5, 3, -3.95);
+			glRotatef(90, 0, 1, 0);
+			glScalef(0.1, 1, 3);
+			drawcubotexturas(2);
 		glPopMatrix();
 
 
@@ -324,10 +574,10 @@ void drawcar() {
 		glPushMatrix();
 			glTranslatef(-8,1.95 , 0);
 
-			glRotatef(angtap,0,0,1);//TODO: COLOCAR VARIAVEL PARA ABRIR A MALA!!
+			glRotatef(angtap,0,0,1);
 			glTranslatef(0.05,1,0);
 			glScalef(0.1, 1, 4);
-			drawcubo();
+			drawcubotexturas(2);
 		glPopMatrix();
 
 		//rodas dir frente
@@ -376,6 +626,7 @@ void display(void) {
 	//================================================================= APaga 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	//glEnable(GL_LIGHTING);
 	//<><><><><><><><><><><><><> Viewport 1 - MAPA   ???
 	glViewport(0, 0, 0.30 * wScreen, 0.30 * hScreen);
 	glMatrixMode(GL_PROJECTION);
@@ -384,12 +635,15 @@ void display(void) {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	gluLookAt(pos[0], pos[1] + 5, pos[2], pos[0], pos[1], pos[2], 0, 0, 1);
+
+	//iluminacao();
+	//drawChao();
 	drawEixos();
 	drawcar();
 	//=======================================================
 
 
-
+	//glEnable(GL_LIGHTING);
 	//================================================================= Viewport 2
 	glViewport(0, 0, wScreen, hScreen);
 	glMatrixMode(GL_PROJECTION);
@@ -407,15 +661,30 @@ void display(void) {
 
 
 	//����������������������������������������������������������Objectos
+	//iluminacao();
+	//drawChao();
 	drawEixos();
-
 	drawcar();
-	//drawjante();
-	/*drawScene();*/
+	drawEsfera();
 
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Actualizacao
 	glutSwapBuffers();
+}
+
+void updateLuz() {
+	localCorAmb[0] = luzR * intensidadeT;
+	localCorAmb[1] = luzG * intensidadeT;
+	localCorAmb[2] = luzB * intensidadeT;
+	localCorDif[0] = luzR * intensidadeT;
+	localCorDif[1] = luzG * intensidadeT;
+	localCorDif[2] = luzB * intensidadeT;
+	localCorEsp[0] = luzR * intensidadeT;
+	localCorEsp[1] = luzG * intensidadeT;
+	localCorEsp[2] = luzB * intensidadeT;;
+	glLightfv(GL_LIGHT0, GL_AMBIENT, localCorAmb);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, localCorDif);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, localCorEsp);
 }
 
 //======================================================= EVENTOS
@@ -428,6 +697,21 @@ void keyboard(unsigned char key, int x, int y) {
 			sempreRodar = !sempreRodar;
 			glutPostRedisplay();
 			break;*/
+	case 'L':	case 'l':
+		Dia = !Dia;
+		if (Dia) {
+			luzGlobalCorAmb[0] = 1.0;
+			luzGlobalCorAmb[1] = 1.0;
+			luzGlobalCorAmb[2] = 1.0;
+		}
+		else {
+			luzGlobalCorAmb[0] = 0.0;
+			luzGlobalCorAmb[1] = 0.0;
+			luzGlobalCorAmb[2] = 0.0;
+		}
+		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, luzGlobalCorAmb);
+		glutPostRedisplay();
+		break;
 
 			//------------------------------ translacao
 	case 'A': case 'a':
@@ -487,23 +771,42 @@ void keyboard(unsigned char key, int x, int y) {
 			glutPostRedisplay();
 		}
 		break;
-	case 'L':case 'l':
-		if (light) {
-			light = 0;
-		}
-		else {
-			light = 1;
-		}
+		//--------------------------- Iluminacaoda sala
+	case 'i': case 'I':
+		intensidadeT = intensidadeT + 0.1;
+		if (intensidadeT > 1.1) intensidadeT = 0;
+		updateLuz();
 		glutPostRedisplay();
 		break;
+	case 'r':case 'R':
+		luzR = (luzR + 1) % 2;
+		updateLuz();
+		glutPostRedisplay();
+		break;
+	case 'g':case 'G':
+		luzG = (luzG + 1) % 2;
+		updateLuz();
+		glutPostRedisplay();
+		break;
+	case 'b':case 'B':
+		luzB = (luzB + 1) % 2;
+		updateLuz();
+		glutPostRedisplay();
+		break;
+
+		//--------------------------- MAterial
+	case 'H': case 'h':
+		material = (material + 1) % 18;
+		initMaterials(material);
+		glutPostRedisplay();
+		break;
+
 	case 27:
 		exit(0);
 		break;
 	}
 
 }
-
-
 
 void teclasNotAscii(int key, int x, int y) {
 
@@ -530,8 +833,20 @@ void teclasNotAscii(int key, int x, int y) {
 	glutPostRedisplay();
 }
 
+void Timer(int value)
+{
+	glutPostRedisplay();
+	glutTimerFunc(100, Timer, 1);
+}
 
-//======================================================= MAIN
+GLvoid resize(GLsizei width, GLsizei height)
+{
+	wScreen = width;
+	hScreen = height;
+	glViewport(0, 0, wScreen, hScreen);
+	glutPostRedisplay();
+}
+
 //======================================================= MAIN
 int main(int argc, char** argv) {
 
@@ -544,8 +859,10 @@ int main(int argc, char** argv) {
 	initialize();
 
 	glutSpecialFunc(teclasNotAscii);
+	glutReshapeFunc(resize);
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
+	glutTimerFunc(100, Timer, 1);
 	glutMainLoop();
 
 	return 0;
