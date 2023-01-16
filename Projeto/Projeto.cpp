@@ -51,14 +51,9 @@ GLuint   texture[5];
 RgbImage imag;
 
 GLfloat Matriz[4][4];
+//============================================================== Malha
+GLint	  dim = 512;   //numero divisoes da grelha
 
-//------------------------------------------------- Propriedades Materiais
-void initMaterials(int material);
-char Materiais[18][30] = {
-	"Esmerald",  "Jade",  "obsidian",    "Pearl",        "Ruby",
-	"Turquoise", "Brass", "Bronze",      "Chrome",       "Copper",
-	"Gold",      "Silver","blackPlastic","cyankPlastic", "greenPlastic",
-	"redPlastic", "whitePlastic","yellowPlastic" };
 
 //=========================================== Objecto
 GLint     material = 10;
@@ -69,8 +64,7 @@ GLfloat intensidadeDia = 0.0;
 GLfloat luzGlobalCorAmb[4] = { intensidadeDia, intensidadeDia,intensidadeDia, 1.0 };   // 
 
 //---------------------------------------------------- Luz pontual no TETO (eixo Y)
-GLint   ligaTeto = 1;		 //:::   'T'  
-GLfloat intensidadeT = 0.3;  //:::   'I'  
+GLfloat intensidadeT = 0.1;  //:::   'I'  
 GLint   luzR = 1;		 	 //:::   'R'  
 GLint   luzG = 1;			 //:::   'G'  
 GLint   luzB = 1;			 //:::   'B'  
@@ -78,6 +72,7 @@ GLfloat localPos[4] = { 0.0, 5.0, 0.0, 1.0 };
 GLfloat localCorAmb[4] = { 0, 0, 0, 0.0 };
 GLfloat localCorDif[4] = { luzR, luzG, luzB, 1.0 };
 GLfloat localCorEsp[4] = { luzR, luzG, luzB, 1.0 };
+GLint ligapontual = 1;
 
 //==================================================================== VERTEX ARAY
 //------------------------------------------- coordenadas + normais + cores
@@ -90,7 +85,7 @@ void initTexturas()
 	glGenTextures(1, &texture[0]);
 	glBindTexture(GL_TEXTURE_2D, texture[0]);
 	imag.LoadBmpFile("sky.bmp");
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -104,7 +99,7 @@ void initTexturas()
 	glGenTextures(1, &texture[1]);
 	glBindTexture(GL_TEXTURE_2D, texture[1]);
 	imag.LoadBmpFile("black-road-texture.bmp");
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -117,7 +112,7 @@ void initTexturas()
 	glGenTextures(1, &texture[2]);
 	glBindTexture(GL_TEXTURE_2D, texture[2]);
 	imag.LoadBmpFile("brown-wooden-flooring.bmp");
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -131,7 +126,7 @@ void initTexturas()
 	glGenTextures(1, &texture[3]);
 	glBindTexture(GL_TEXTURE_2D, texture[3]);
 	imag.LoadBmpFile("pintura_azul_chama.bmp");
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -145,7 +140,7 @@ void initTexturas()
 	glGenTextures(1, &texture[4]);
 	glBindTexture(GL_TEXTURE_2D, texture[4]);
 	imag.LoadBmpFile("blue-concrete-textured-wall.bmp");
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -173,7 +168,7 @@ void initLights(void) {
 
 void initialize(void)
 {
-	glClearColor(WHITE);		//������������������������������Apagar
+	glClearColor(BLACK);		//������������������������������Apagar
 	glShadeModel(GL_SMOOTH);	//������������������������������Interpolacao de cores
 	initTexturas();
 	glEnable(GL_DEPTH_TEST);	//������������������������������Profundidade
@@ -181,11 +176,10 @@ void initialize(void)
 	glEnable(GL_NORMALIZE);
 
 	////…………………………………………………………………………………………………………………………… ILUMINACAO / MAteriais
-	//glEnable(GL_LIGHTING);
-	//glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
 
-	//initLights();
-	//initMaterials(10);   // gold
+	initLights();
 
 
 	glEnable(GL_CULL_FACE);		//������������������������������Faces visiveis
@@ -212,7 +206,6 @@ void drawEixos()
 	glVertex3f(0, 0, 0);
 	glVertex3f(0, 0, 0.5 * SIZE);
 	glEnd();
-
 }
 
 void iluminacao() {
@@ -220,12 +213,14 @@ void iluminacao() {
 	glLightfv(GL_LIGHT0, GL_AMBIENT, localCorAmb);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, localCorDif);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, localCorEsp);
-	glEnable(GL_LIGHT0);
+	if (ligapontual)
+		glEnable(GL_LIGHT0);
+	else
+		glDisable(GL_LIGHT0);
 }
 
 void drawChao() {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Chao y=0
-	initMaterials(material);
 	glPushMatrix();
 	glNormal3f(0, 1, 0);   // virado para cima
 
@@ -291,6 +286,7 @@ void drawcabine() {
 void drawcubo() {
 	//esquerda
 	glBegin(GL_QUADS);
+	glNormal3f(-1, 0, 0);
 	glVertex3f(-tam, -tam, tam);//0
 	glVertex3f(-tam, tam, tam);//1
 	glVertex3f(-tam, tam, -tam);//2
@@ -298,6 +294,7 @@ void drawcubo() {
 	glEnd();
 	//cima
 	glBegin(GL_QUADS);
+	glNormal3f(0, 0, 1);
 	glVertex3f(tam, tam, tam);//5
 	glVertex3f(tam, tam, -tam);//6
 	glVertex3f(-tam, tam, -tam);//2
@@ -305,6 +302,7 @@ void drawcubo() {
 	glEnd();
 	//direita
 	glBegin(GL_QUADS);
+	glNormal3f(1, 0, 0);
 	glVertex3f(tam, -tam, -tam);//7
 	glVertex3f(tam, tam, -tam);//6
 	glVertex3f(tam, tam, tam);//5
@@ -312,6 +310,7 @@ void drawcubo() {
 	glEnd();
 	//baixo
 	glBegin(GL_QUADS);
+	glNormal3f(0, 0, -1);
 	glVertex3f(-tam, -tam, -tam);//3
 	glVertex3f(tam, -tam, -tam);//7
 	glVertex3f(tam, -tam, tam);//4
@@ -319,6 +318,7 @@ void drawcubo() {
 	glEnd();
 	//tras
 	glBegin(GL_QUADS);
+	glNormal3f(0, -1, 0);
 	glVertex3f(-tam, tam, -tam);//2
 	glVertex3f(tam, tam, -tam);//6
 	glVertex3f(tam, -tam, -tam);//7
@@ -326,6 +326,7 @@ void drawcubo() {
 	glEnd();
 	//frente
 	glBegin(GL_QUADS);
+	glNormal3f(0, 1, 0);
 	glVertex3f(tam, -tam, tam);//4
 	glVertex3f(tam, tam, tam);//5
 	glVertex3f(-tam, tam, tam);//1
@@ -340,6 +341,7 @@ void drawcubotexturas(int tex) {
 
 	//esquerda
 	glBegin(GL_QUADS);
+	glNormal3f(-1, 0, 0);
 	glTexCoord2f(1.0f, 0.0f);
 	glVertex3f(-tam, -tam, tam);//0
 	glTexCoord2f(1.0f, 1.0f);
@@ -351,6 +353,7 @@ void drawcubotexturas(int tex) {
 	glEnd();
 	//cima
 	glBegin(GL_QUADS);
+	glNormal3f(0, 0, 1);
 	glTexCoord2f(1.0f, 0.0f);
 	glVertex3f(tam, tam, tam);//5
 	glTexCoord2f(1.0f, 1.0f);
@@ -362,6 +365,7 @@ void drawcubotexturas(int tex) {
 	glEnd();
 	//direita
 	glBegin(GL_QUADS);
+	glNormal3f(1, 0, 0);
 	glTexCoord2f(1.0f, 0.0f);
 	glVertex3f(tam, -tam, -tam);//7
 	glTexCoord2f(1.0f, 1.0f);
@@ -373,6 +377,7 @@ void drawcubotexturas(int tex) {
 	glEnd();
 	//baixo
 	glBegin(GL_QUADS);
+	glNormal3f(0, 0, -1);
 	glTexCoord2f(1.0f, 0.0f);
 	glVertex3f(-tam, -tam, -tam);//3
 	glTexCoord2f(1.0f, 1.0f);
@@ -384,6 +389,7 @@ void drawcubotexturas(int tex) {
 	glEnd();
 	//tras
 	glBegin(GL_QUADS);
+	glNormal3f(0, -1, 0);
 	glTexCoord2f(1.0f, 1.0f);
 	glVertex3f(-tam, tam, -tam);//2
 	glTexCoord2f(0.0f, 1.0f);
@@ -395,6 +401,7 @@ void drawcubotexturas(int tex) {
 	glEnd();
 	//frente
 	glBegin(GL_QUADS);
+	glNormal3f(0, 1, 0);
 	glTexCoord2f(1.0f, 0.0f);
 	glVertex3f(tam, -tam, tam);//4
 	glTexCoord2f(1.0f, 1.0f);
@@ -410,215 +417,304 @@ void drawcubotexturas(int tex) {
 
 void drawjante() {
 	glPushMatrix();
-		
-		glPushMatrix();
-		glRotatef(rotrodas, 0, 0, 1);
-		glScalef(1, 0.1, 0.1);
-		drawcubo();
-		glPopMatrix();
 
-		glPushMatrix();
-		glRotatef(rotrodas+45, 0, 0, 1);
-		glScalef(1, 0.1, 0.1);
-		drawcubo();
-		glPopMatrix();
+	glPushMatrix();
+	glRotatef(rotrodas, 0, 0, 1);
+	glScalef(1, 0.1, 0.1);
+	drawcubo();
+	glPopMatrix();
 
-		glPushMatrix();
-		glRotatef(rotrodas + 90, 0, 0, 1);
-		glScalef(1, 0.1, 0.1);
-		drawcubo();
-		glPopMatrix();
+	glPushMatrix();
+	glRotatef(rotrodas + 45, 0, 0, 1);
+	glScalef(1, 0.1, 0.1);
+	drawcubo();
+	glPopMatrix();
 
-		glPushMatrix();
-		glRotatef(rotrodas + 135, 0, 0, 1);
-		glScalef(1, 0.1, 0.1);
-		drawcubo();
-		glPopMatrix();
+	glPushMatrix();
+	glRotatef(rotrodas + 90, 0, 0, 1);
+	glScalef(1, 0.1, 0.1);
+	drawcubo();
+	glPopMatrix();
+
+	glPushMatrix();
+	glRotatef(rotrodas + 135, 0, 0, 1);
+	glScalef(1, 0.1, 0.1);
+	drawcubo();
+	glPopMatrix();
 
 	glPopMatrix();
 }
 
 void drawcar() {
 	glPushMatrix();
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		glTranslatef(pos[0], pos[1], pos[2]);
-		glRotatef(theta, 0, 1, 0);
-		
-		//base da pickup
-		glColor3f(0.0745, 0.3176, 0.8471);
+	glTranslatef(pos[0], pos[1], pos[2]);
+	glRotatef(theta, 0, 1, 0);
+
+	//base da pickup
+	glColor3f(0.0745, 0.3176, 0.8471);
+	glPushMatrix();
+	glScalef(8, 2, 4);
+	drawcubotexturas(3);
+	glPopMatrix();
+
+	if (light) {
+		//luzes
+		//frente direita
 		glPushMatrix();
-			glScalef(8, 2, 4);
-			drawcubotexturas(3);
+		float corluzfrente[] = { 1, 1, 0,1 };
+		glMaterialfv(GL_FRONT, GL_AMBIENT, corluzfrente);
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, corluzfrente);
+		glMaterialfv(GL_FRONT, GL_SPECULAR, corluzfrente);
+		glTranslatef(8, 0.9, 2.999);
+		glScalef(0.5, 1, 1);
+		drawcubo();
 		glPopMatrix();
 
-		if(light){
-			//luzes
-			//frente direita
-			glColor3f(1, 1, 0);
-			glPushMatrix();
-			glTranslatef(8, 0.9, 2.999);
-			glScalef(0.5, 1, 1);
-			drawcubo();
-			glPopMatrix();
-
-			//frente esquerda
-			glPushMatrix();
-			glTranslatef(8, 0.9, -2.999);
-			glScalef(0.5, 1, 1);
-			drawcubo();
-			glPopMatrix();
-
-			//tras direita
-			glColor3f(1, 0, 0);
-			glPushMatrix();
-			glTranslatef(-7.5555, 0.9, 2.999);
-			glScalef(0.5, 1, 1);
-			drawcubo();
-			glPopMatrix();
-
-			//tras direita
-			glColor3f(1, 0, 0);
-			glPushMatrix();
-			glTranslatef(-7.5555, 0.9, -2.999);
-			glScalef(0.5, 1, 1);
-			drawcubo();
-			glPopMatrix();
-		}
-
-
-
-		//habitaculo
-		glColor3f(0.0745, 0.3176, 0.8471);
+		//frente esquerda
 		glPushMatrix();
-			glTranslatef(-0.5, 4, 0);
-
-			glScalef(1.5,2,4);
-
-			drawcubotexturas(4);
+		glTranslatef(8, 0.9, -2.999);
+		glScalef(0.5, 1, 1);
+		drawcubo();
 		glPopMatrix();
 
-		//cabine vidro DIR
-		glColor4f(0, 0, 0, 0.6);
-		glPushMatrix();
-			glTranslatef(3, ywindow, 3.98); 
-			glRotatef(90, 0, 1, 0);
-			glScalef(0.01, 1.9999, 2);
+		float corluztras[] = { 1, 0, 0,1 };
+		glMaterialfv(GL_FRONT, GL_AMBIENT, corluztras);
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, corluztras);
+		glMaterialfv(GL_FRONT, GL_SPECULAR, corluztras);
 
-			drawcabine();
-		glPopMatrix();
-		//cabine vidro ESQ
-		glColor4f(0, 0, 0, 0.6);
+		//tras direita
+		glColor3f(1, 0, 0);
 		glPushMatrix();
-			glTranslatef(3, ywindow, -3.98);
-			glRotatef(90, 0, 1, 0);
-			glScalef(0.01, 1.9999, 2);
-
-		drawcabine();
+		glTranslatef(-7.5555, 0.9, 2.999);
+		glScalef(0.5, 1, 1);
+		drawcubo();
 		glPopMatrix();
 
-		//col vidro dianteiro
-		glColor4f(0, 0, 0, 1);
+		//tras direita
+		glColor3f(1, 0, 0);
 		glPushMatrix();
-			glTranslatef(3, 3.8, 3.799);
-			glRotatef(45, 0, 0, 1);
-			glScalef(0.2, 2.9, 0.2);
-
-			drawcubo();
+		glTranslatef(-7.5555, 0.9, -2.999);
+		glScalef(0.5, 1, 1);
+		drawcubo();
 		glPopMatrix();
-
-		//col vidro dir
-		glColor4f(0, 0, 0, 1);
-		glPushMatrix();
-			glTranslatef(3, 3.8, -3.799);
-			glRotatef(45, 0, 0, 1);
-			glScalef(0.2, 2.9, 0.2);
-
-			drawcubo();
-		glPopMatrix();
-		
-		//vidro dianteiro
-		glColor4f(0.6, 0.8, 0.9, 0.5);
-		glPushMatrix();
-		glTranslatef(3, 4,0);
-			glRotatef(45, 0, 0, 1);
-			glScalef(0.01, 2.84, 3.99);
-
-			drawcubo();
-		glPopMatrix();
+	}
 
 
 
-		//mala lateral dir 
-		glColor3f(0.6, 0.3, 0);
-		glPushMatrix();
-			glTranslatef(-5, 3, 3.95);
-			glRotatef(90, 0, 1, 0);
-			glScalef(0.1, 1, 3);
-			drawcubotexturas(2);
-		glPopMatrix();
+	//habitaculo
+	glPushMatrix();
+	float corHAb[] = { 0.0745, 0.3176, 0.8471,1 };
 
-		//mala lateral esq 
-		glColor3f(0.6, 0.3, 0);
-		glPushMatrix();
-			glTranslatef(-5, 3, -3.95);
-			glRotatef(90, 0, 1, 0);
-			glScalef(0.1, 1, 3);
-			drawcubotexturas(2);
-		glPopMatrix();
+	glMaterialfv(GL_FRONT, GL_AMBIENT, corHAb);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, corHAb);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, corHAb);
+	glTranslatef(-0.5, 4, 0);
+
+	glScalef(1.5, 2, 4);
+
+	drawcubotexturas(4);
+	glPopMatrix();
+
+	//cabine vidro DIR
+	float corVIDROfUM[] = { 0, 0, 0,0.6 };
+
+	glMaterialfv(GL_FRONT, GL_AMBIENT, corVIDROfUM);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, corVIDROfUM);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, corVIDROfUM);
+	//glColor4f(0, 0, 0, 0.6);
+	glPushMatrix();
+	glTranslatef(3, ywindow, 3.98);
+	glRotatef(90, 0, 1, 0);
+	glScalef(0.01, 1.9999, 2);
+
+	drawcabine();
+	glPopMatrix();
+	//cabine vidro ESQ
+	//glColor4f(0, 0, 0, 0.6);
+	glPushMatrix();
+	glTranslatef(3, ywindow, -3.98);
+	glRotatef(90, 0, 1, 0);
+	glScalef(0.01, 1.9999, 2);
+
+	drawcabine();
+	glPopMatrix();
+	float corcolhab[] = { 0, 0, 0,1 };
+
+	glMaterialfv(GL_FRONT, GL_AMBIENT, corcolhab);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, corcolhab);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, corcolhab);
+
+	//col vidro dianteiro
+	//glColor4f(0, 0, 0, 1);
+	glPushMatrix();
+	glTranslatef(3, 3.8, 3.799);
+	glRotatef(45, 0, 0, 1);
+	glScalef(0.2, 2.9, 0.2);
+
+	drawcubo();
+	glPopMatrix();
+
+	//col vidro dir
+	//glColor4f(0, 0, 0, 1);
+	glPushMatrix();
+	glTranslatef(3, 3.8, -3.799);
+	glRotatef(45, 0, 0, 1);
+	glScalef(0.2, 2.9, 0.2);
+
+	drawcubo();
+	glPopMatrix();
+
+	//vidro dianteiro
+	float corVIDROFRT[] = { 0.6, 0.8, 0.9,0.5 };
+
+	glMaterialfv(GL_FRONT, GL_AMBIENT, corVIDROFRT);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, corVIDROFRT);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, corVIDROFRT);
+	glColor4f(0.6, 0.8, 0.9, 0.5);
+	glPushMatrix();
+	glTranslatef(3, 4, 0);
+	glRotatef(45, 0, 0, 1);
+	glScalef(0.01, 2.84, 3.99);
+
+	drawcubo();
+	glPopMatrix();
 
 
-		//mala lateral parte tras
-		glColor3f(0.6, 0.3, 0);
-		glPushMatrix();
-			glTranslatef(-8,1.95 , 0);
 
-			glRotatef(angtap,0,0,1);
-			glTranslatef(0.05,1,0);
-			glScalef(0.1, 1, 4);
-			drawcubotexturas(2);
-		glPopMatrix();
+	//mala lateral dir 
+	float corMala[] = { 0.3, 0.15, 0,1 };
 
-		//rodas dir frente
-		glColor3f(0, 0, 0);
-		glPushMatrix();
-		glTranslatef(5.5, -2, 4.7);
-		glRotatef(rotrodas, 0, 0, 1);
-		drawjante();
-		glutSolidTorus(0.7, 1.5, 15, 15);
-		glPopMatrix();
+	glMaterialfv(GL_FRONT, GL_AMBIENT, corMala);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, corMala);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, corMala);
+	//glColor3f(0.6, 0.3, 0);
+	glPushMatrix();
+	glTranslatef(-5, 3, 3.95);
+	glRotatef(90, 0, 1, 0);
+	glScalef(0.1, 1, 3);
+	drawcubotexturas(2);
+	glPopMatrix();
 
-		//rodas esq frente
-		glColor3f(0, 0, 0);
-		glPushMatrix();
-		glTranslatef(5.5, -2, -4.7);
-		glRotatef(rotrodas, 0, 0, 1);
-		drawjante();
-		glutSolidTorus(0.7, 1.5, 15, 15);
-		glPopMatrix();
+	//mala lateral esq 
+	//glColor3f(0.6, 0.3, 0);
+	glPushMatrix();
+	glTranslatef(-5, 3, -3.95);
+	glRotatef(90, 0, 1, 0);
+	glScalef(0.1, 1, 3);
+	drawcubotexturas(2);
+	glPopMatrix();
 
-		//rodas esq tras
-		glColor3f(0, 0, 0);
-		glPushMatrix();
-		glTranslatef(-5.5, -2, -4.7);
-		glRotatef(rotrodas, 0, 0, 1);
-		drawjante();
-		glutSolidTorus(0.7, 1.5, 15, 15);//glutWireTorus(0.5, 1.5, 15, 15);
-		glPopMatrix();
 
-		//rodas dir tras
-		glColor3f(0, 0, 0);
-		glPushMatrix();
-		glTranslatef(-5.5, -2, 4.7);
-		glRotatef(rotrodas, 0, 0, 1);
-		drawjante();
-		glutSolidTorus(0.7, 1.5, 15, 15);
-		glPopMatrix();
-		glGetFloatv(GL_MODELVIEW_MATRIX, &Matriz[0][0]);
-		glDisable(GL_BLEND);
+	//mala lateral parte tras
+	//glColor3f(0.6, 0.3, 0);
+	glPushMatrix();
+	glTranslatef(-8, 1.95, 0);
+
+	glRotatef(angtap, 0, 0, 1);
+	glTranslatef(0.05, 1, 0);
+	glScalef(0.1, 1, 4);
+	drawcubotexturas(2);
+	glPopMatrix();
+
+	//rodas dir frente
+	//glColor3f(0.07, 0.07, 0.07);
+	glPushMatrix();
+	float corWeel[] = { 0.07, 0.07, 0.07,1 };
+
+	glMaterialfv(GL_FRONT, GL_AMBIENT, corWeel);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, corWeel);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, corWeel);
+	glTranslatef(5.5, -2, 4.7);
+	glRotatef(rotrodas, 0, 0, 1);
+	drawjante();
+	glutSolidTorus(0.7, 1.5, 15, 15);
+	glPopMatrix();
+
+	//rodas esq frente
+	//glColor3f(0.07, 0.07, 0.07);
+	glPushMatrix();
+	glTranslatef(5.5, -2, -4.7);
+	glRotatef(rotrodas, 0, 0, 1);
+	drawjante();
+	glutSolidTorus(0.7, 1.5, 15, 15);
+	glPopMatrix();
+
+	//rodas esq tras
+	//glColor3f(0.07, 0.07, 0.07);
+	glPushMatrix();
+	glTranslatef(-5.5, -2, -4.7);
+	glRotatef(rotrodas, 0, 0, 1);
+	drawjante();
+	glutSolidTorus(0.7, 1.5, 15, 15);//glutWireTorus(0.5, 1.5, 15, 15);
+	glPopMatrix();
+
+	//rodas dir tras
+	//glColor3f(0.07, 0.07, 0.07);
+	glPushMatrix();
+	glTranslatef(-5.5, -2, 4.7);
+	glRotatef(rotrodas, 0, 0, 1);
+	drawjante();
+	glutSolidTorus(0.7, 1.5, 15, 15);
+	glPopMatrix();
+	glGetFloatv(GL_MODELVIEW_MATRIX, &Matriz[0][0]);
+	glDisable(GL_BLEND);
 	glPopMatrix();
 }
+
+void drawmalha() {
+	glEnable(GL_TEXTURE_2D);
+	//----------------------------------------------- Quadro Material - branco
+	float corAmb[] = { 1,1,1,1 };
+	glMaterialfv(GL_FRONT, GL_AMBIENT, corAmb);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, corAmb);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, corAmb);
+	//----------------------------------------------- Dsenha malha poligonos
+	//----------------------------------------------- Textura - Alcatrao
+	glBindTexture(GL_TEXTURE_2D, texture[1]);
+
+	int				i, j;
+	float			med_dim = (float)dim / 2;
+	glPushMatrix();
+	glScalef(25, 1, 25);
+	glTranslatef(-1.0, -4, -1.0);  // meio do poligono 
+
+	glNormal3f(0, 1, 0);          //normal 
+
+	glBegin(GL_QUADS);
+	for (i = 0; i < dim; i++)
+		for (j = 0; j < dim; j++) {
+			glTexCoord2f((float)j / dim, (float)(i + 1) / dim);
+			glVertex3d((float)j / med_dim, 0, (float)(i + 1) / med_dim);
+			glTexCoord2f((float)(j + 1) / dim, (float)i / dim);
+			glVertex3d((float)(j + 1) / med_dim, 0 , (float)i / med_dim);
+			glTexCoord2f((float)j / dim, (float)i / dim);
+			glVertex3d((float)j / med_dim, 0, (float)i / med_dim);
+			glTexCoord2f((float)(j + 1) / dim, (float)(i + 1) / dim);
+			glVertex3d((float)(j + 1) / med_dim, 0, (float)(i + 1) / med_dim );
+		}
+	glEnd();
+	glPopMatrix();
+	glDisable(GL_TEXTURE_2D);
+}
+
+void updateLuz() {
+	localCorAmb[0] = luzR * intensidadeT;
+	localCorAmb[1] = luzG * intensidadeT;
+	localCorAmb[2] = luzB * intensidadeT;
+	localCorDif[0] = luzR * intensidadeT;
+	localCorDif[1] = luzG * intensidadeT;
+	localCorDif[2] = luzB * intensidadeT;
+	localCorEsp[0] = luzR * intensidadeT;
+	localCorEsp[1] = luzG * intensidadeT;
+	localCorEsp[2] = luzB * intensidadeT;;
+	glLightfv(GL_LIGHT0, GL_AMBIENT, localCorAmb);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, localCorDif);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, localCorEsp);
+}
+
 
 //====================================================== 
 void display(void) {
@@ -636,10 +732,13 @@ void display(void) {
 	glLoadIdentity();
 	gluLookAt(pos[0], pos[1] + 5, pos[2], pos[0], pos[1], pos[2], 0, 0, 1);
 
-	//iluminacao();
+	//����������������������������������������������������������Objectos
+	updateLuz();
+	iluminacao();
 	//drawChao();
 	drawEixos();
 	drawcar();
+	drawmalha();
 	//=======================================================
 
 
@@ -656,35 +755,22 @@ void display(void) {
 	//======================================================
 	//  <><><><><><><>         OBSERVADOR NAO EST� FIXO ????
 	//gluLookAt(obsP[0], obsP[1], obsP[2], pos[0], pos[1], pos[2], 0, 1, 0);
-	gluLookAt(obsP[0], obsP[1], obsP[2], 0,0,0, 0, 1, 0);
+	gluLookAt(obsP[0], obsP[1], obsP[2], 0, 0, 0, 0, 1, 0);
 	//======================================================
 
 
 	//����������������������������������������������������������Objectos
-	//iluminacao();
+	updateLuz();
+	iluminacao();
 	//drawChao();
 	drawEixos();
 	drawcar();
 	drawEsfera();
+	drawmalha();
 
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Actualizacao
 	glutSwapBuffers();
-}
-
-void updateLuz() {
-	localCorAmb[0] = luzR * intensidadeT;
-	localCorAmb[1] = luzG * intensidadeT;
-	localCorAmb[2] = luzB * intensidadeT;
-	localCorDif[0] = luzR * intensidadeT;
-	localCorDif[1] = luzG * intensidadeT;
-	localCorDif[2] = luzB * intensidadeT;
-	localCorEsp[0] = luzR * intensidadeT;
-	localCorEsp[1] = luzG * intensidadeT;
-	localCorEsp[2] = luzB * intensidadeT;;
-	glLightfv(GL_LIGHT0, GL_AMBIENT, localCorAmb);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, localCorDif);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, localCorEsp);
 }
 
 //======================================================= EVENTOS
@@ -713,7 +799,7 @@ void keyboard(unsigned char key, int x, int y) {
 		glutPostRedisplay();
 		break;
 
-			//------------------------------ translacao
+		//------------------------------ translacao
 	case 'A': case 'a':
 		theta += 3.;
 		glutPostRedisplay();
@@ -772,6 +858,12 @@ void keyboard(unsigned char key, int x, int y) {
 		}
 		break;
 		//--------------------------- Iluminacaoda sala
+	case 'P': case 'p':
+		ligapontual = !ligapontual;
+		iluminacao();
+		glutPostRedisplay();
+		break;
+
 	case 'i': case 'I':
 		intensidadeT = intensidadeT + 0.1;
 		if (intensidadeT > 1.1) intensidadeT = 0;
@@ -794,12 +886,12 @@ void keyboard(unsigned char key, int x, int y) {
 		glutPostRedisplay();
 		break;
 
-		//--------------------------- MAterial
-	case 'H': case 'h':
-		material = (material + 1) % 18;
-		initMaterials(material);
-		glutPostRedisplay();
-		break;
+	//	//--------------------------- MAterial
+	//case 'H': case 'h':
+	//	material = (material + 1) % 18;
+	//	initMaterials(material);
+	//	glutPostRedisplay();
+	//	break;
 
 	case 27:
 		exit(0);
@@ -839,14 +931,6 @@ void Timer(int value)
 	glutTimerFunc(100, Timer, 1);
 }
 
-GLvoid resize(GLsizei width, GLsizei height)
-{
-	wScreen = width;
-	hScreen = height;
-	glViewport(0, 0, wScreen, hScreen);
-	glutPostRedisplay();
-}
-
 //======================================================= MAIN
 int main(int argc, char** argv) {
 
@@ -859,7 +943,6 @@ int main(int argc, char** argv) {
 	initialize();
 
 	glutSpecialFunc(teclasNotAscii);
-	glutReshapeFunc(resize);
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutTimerFunc(100, Timer, 1);
