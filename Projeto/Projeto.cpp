@@ -53,7 +53,7 @@ RgbImage imag;
 GLfloat Matriz[4][4];
 //============================================================== Malha
 GLint	  dim = 512;   //numero divisoes da grelha
-
+GLint	  malha = 1;   //Visivel ou inv malha 
 
 //=========================================== Objecto
 GLint     material = 10;
@@ -64,7 +64,7 @@ GLfloat intensidadeDia = 0.0;
 GLfloat luzGlobalCorAmb[4] = { intensidadeDia, intensidadeDia,intensidadeDia, 1.0 };   // 
 
 //---------------------------------------------------- Luz pontual no TETO (eixo Y)
-GLfloat intensidadeT = 0.1;  //:::   'I'  
+GLfloat intensidadeT = 0.3;  //:::   'I'  
 GLint   luzR = 1;		 	 //:::   'R'  
 GLint   luzG = 1;			 //:::   'G'  
 GLint   luzB = 1;			 //:::   'B'  
@@ -149,7 +149,7 @@ void initTexturas()
 		imag.GetNumCols(),
 		imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
 		imag.ImageData());
-	
+
 
 }
 
@@ -294,7 +294,7 @@ void drawcubo() {
 	glEnd();
 	//cima
 	glBegin(GL_QUADS);
-	glNormal3f(0, 0, 1);
+	glNormal3f(0, 1, 0);
 	glVertex3f(tam, tam, tam);//5
 	glVertex3f(tam, tam, -tam);//6
 	glVertex3f(-tam, tam, -tam);//2
@@ -310,7 +310,7 @@ void drawcubo() {
 	glEnd();
 	//baixo
 	glBegin(GL_QUADS);
-	glNormal3f(0, 0, -1);
+	glNormal3f(0, -1, 0);
 	glVertex3f(-tam, -tam, -tam);//3
 	glVertex3f(tam, -tam, -tam);//7
 	glVertex3f(tam, -tam, tam);//4
@@ -318,7 +318,7 @@ void drawcubo() {
 	glEnd();
 	//tras
 	glBegin(GL_QUADS);
-	glNormal3f(0, -1, 0);
+	glNormal3f(0, 0, -1);
 	glVertex3f(-tam, tam, -tam);//2
 	glVertex3f(tam, tam, -tam);//6
 	glVertex3f(tam, -tam, -tam);//7
@@ -326,7 +326,7 @@ void drawcubo() {
 	glEnd();
 	//frente
 	glBegin(GL_QUADS);
-	glNormal3f(0, 1, 0);
+	glNormal3f(0, 0, 1);
 	glVertex3f(tam, -tam, tam);//4
 	glVertex3f(tam, tam, tam);//5
 	glVertex3f(-tam, tam, tam);//1
@@ -353,7 +353,7 @@ void drawcubotexturas(int tex) {
 	glEnd();
 	//cima
 	glBegin(GL_QUADS);
-	glNormal3f(0, 0, 1);
+	glNormal3f(0, 1, 0);
 	glTexCoord2f(1.0f, 0.0f);
 	glVertex3f(tam, tam, tam);//5
 	glTexCoord2f(1.0f, 1.0f);
@@ -377,7 +377,7 @@ void drawcubotexturas(int tex) {
 	glEnd();
 	//baixo
 	glBegin(GL_QUADS);
-	glNormal3f(0, 0, -1);
+	glNormal3f(0, -1, 0);
 	glTexCoord2f(1.0f, 0.0f);
 	glVertex3f(-tam, -tam, -tam);//3
 	glTexCoord2f(1.0f, 1.0f);
@@ -389,7 +389,7 @@ void drawcubotexturas(int tex) {
 	glEnd();
 	//tras
 	glBegin(GL_QUADS);
-	glNormal3f(0, -1, 0);
+	glNormal3f(0, 0, -1);
 	glTexCoord2f(1.0f, 1.0f);
 	glVertex3f(-tam, tam, -tam);//2
 	glTexCoord2f(0.0f, 1.0f);
@@ -401,7 +401,7 @@ void drawcubotexturas(int tex) {
 	glEnd();
 	//frente
 	glBegin(GL_QUADS);
-	glNormal3f(0, 1, 0);
+	glNormal3f(0, 0, 1);
 	glTexCoord2f(1.0f, 0.0f);
 	glVertex3f(tam, -tam, tam);//4
 	glTexCoord2f(1.0f, 1.0f);
@@ -678,22 +678,26 @@ void drawmalha() {
 	int				i, j;
 	float			med_dim = (float)dim / 2;
 	glPushMatrix();
-	glScalef(25, 1, 25);
-	glTranslatef(-1.0, -4, -1.0);  // meio do poligono 
+	glScalef(40, 1, 40);
+	glTranslatef(0, -4.0, 0);  // meio do poligono 
+
+	glRotatef(-90, 1, 0, 0);
+	glTranslatef(-1.0, -1.0, 0);  // meio do poligono 
+
 
 	glNormal3f(0, 1, 0);          //normal 
 
 	glBegin(GL_QUADS);
 	for (i = 0; i < dim; i++)
 		for (j = 0; j < dim; j++) {
-			glTexCoord2f((float)j / dim, (float)(i + 1) / dim);
-			glVertex3d((float)j / med_dim, 0, (float)(i + 1) / med_dim);
-			glTexCoord2f((float)(j + 1) / dim, (float)i / dim);
-			glVertex3d((float)(j + 1) / med_dim, 0 , (float)i / med_dim);
 			glTexCoord2f((float)j / dim, (float)i / dim);
-			glVertex3d((float)j / med_dim, 0, (float)i / med_dim);
+			glVertex3d((float)j / med_dim, (float)i / med_dim, 0);
+			glTexCoord2f((float)(j + 1) / dim, (float)i / dim);
+			glVertex3d((float)(j + 1) / med_dim, (float)i / med_dim, 0);
 			glTexCoord2f((float)(j + 1) / dim, (float)(i + 1) / dim);
-			glVertex3d((float)(j + 1) / med_dim, 0, (float)(i + 1) / med_dim );
+			glVertex3d((float)(j + 1) / med_dim, (float)(i + 1) / med_dim, 0);
+			glTexCoord2f((float)j / dim, (float)(i + 1) / dim);
+			glVertex3d((float)j / med_dim, (float)(i + 1) / med_dim, 0);
 		}
 	glEnd();
 	glPopMatrix();
@@ -735,10 +739,13 @@ void display(void) {
 	//����������������������������������������������������������Objectos
 	updateLuz();
 	iluminacao();
-	//drawChao();
 	drawEixos();
 	drawcar();
-	drawmalha();
+	if (malha) {
+		drawmalha();
+	}
+	//drawChao();//sem malha ...
+	
 	//=======================================================
 
 
@@ -754,7 +761,6 @@ void display(void) {
 
 	//======================================================
 	//  <><><><><><><>         OBSERVADOR NAO EST� FIXO ????
-	//gluLookAt(obsP[0], obsP[1], obsP[2], pos[0], pos[1], pos[2], 0, 1, 0);
 	gluLookAt(obsP[0], obsP[1], obsP[2], 0, 0, 0, 0, 1, 0);
 	//======================================================
 
@@ -766,8 +772,10 @@ void display(void) {
 	drawEixos();
 	drawcar();
 	drawEsfera();
-	drawmalha();
-
+	if (malha) {
+		drawmalha();
+	}
+	
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Actualizacao
 	glutSwapBuffers();
@@ -885,13 +893,28 @@ void keyboard(unsigned char key, int x, int y) {
 		updateLuz();
 		glutPostRedisplay();
 		break;
-
-	//	//--------------------------- MAterial
-	//case 'H': case 'h':
-	//	material = (material + 1) % 18;
-	//	initMaterials(material);
-	//	glutPostRedisplay();
-	//	break;
+	case 'C':case 'c':
+		malha = !malha;
+		glutPostRedisplay();
+		break;
+	case 'z':
+	case 'Z':
+		dim = 2 * dim;
+		if (dim > 256) dim = 256;
+		glutPostRedisplay();
+		break;
+	case 'x':
+	case 'X':
+		dim = 0.5 * dim;
+		if (dim < 1) dim = 1;
+		glutPostRedisplay();
+		break;
+		//	//--------------------------- MAterial
+		//case 'H': case 'h':
+		//	material = (material + 1) % 18;
+		//	initMaterials(material);
+		//	glutPostRedisplay();
+		//	break;
 
 	case 27:
 		exit(0);
