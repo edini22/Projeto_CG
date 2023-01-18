@@ -21,14 +21,14 @@
 
 //------------------------------------------------------------ Sistema Coordenadas 
 GLint		wScreen = 800, hScreen = 600;		//.. janela - pixeis
-GLfloat		SIZE = 40.0;	//.. Mundo  SIZE=coordenadas x=y=z
+GLfloat		SIZE = 10.0;	//.. Mundo  SIZE=coordenadas x=y=z
 GLfloat     xC = 40.0, yC = 40.0, zC = 40.0;
 
 
 //===========================================================Variaveis e constantes
 
 //============================================================= Observador
-GLfloat  rVisao = 20, aVisao = -0.5 * PI, incVisao = 1;
+GLfloat  rVisao = -20, aVisao = -0.5 * PI, incVisao = 1;
 GLfloat  obsP[] = { rVisao * cos(aVisao), 2.0, rVisao * sin(aVisao) };
 //GLfloat  obsP[] = { -20 , 10.0, 0 };
 float	 anguloZ = 35;
@@ -51,9 +51,7 @@ GLuint   texture[5];
 RgbImage imag;
 
 GLfloat Matriz[4][4];
-//============================================================== Malha
-GLint	  dim = 512;   //numero divisoes da grelha
-GLint	  malha = 1;   //Visivel ou inv malha 
+
 
 //=========================================== Objecto
 GLint     material = 10;
@@ -61,7 +59,7 @@ GLint     material = 10;
 //---------------------------------------------------- AMBIENTE - fixa
 GLint   Dia = 0;     //:::   'D'  
 GLfloat intensidadeDia = 0.0;
-GLfloat luzGlobalCorAmb[4] = { intensidadeDia, intensidadeDia,intensidadeDia, 1.0 };   // 
+GLfloat luzGlobalCorAmb[4] = { intensidadeDia, intensidadeDia,intensidadeDia, 0.0 };   // 
 
 //---------------------------------------------------- Luz pontual no TETO (eixo Y)
 GLfloat intensidadeT = 0.3;  //:::   'I'  
@@ -72,7 +70,31 @@ GLfloat localPos[4] = { 0.0, 5.0, 0.0, 1.0 };
 GLfloat localCorAmb[4] = { 0, 0, 0, 0.0 };
 GLfloat localCorDif[4] = { luzR, luzG, luzB, 1.0 };
 GLfloat localCorEsp[4] = { luzR, luzG, luzB, 1.0 };
-GLint ligapontual = 1;
+GLint ligateto = 1;
+
+//GL_LIGHT1
+GLfloat l1Pos[] = { 0, 10, 0, 1 };
+GLfloat l1Amb[] = { 0, 0., 0, 0 };
+GLfloat l1Dif[] = { 1., 1., 0., 1. };
+GLfloat l1Spec[] = { 0., 1., 0., 1. };
+GLfloat upDownAngle = 0.;
+GLuint n = 30, m = 30;
+GLdouble phase = 0., phaseSpeed = 0.5, w = 1.;
+bool showGrid = false;
+
+//==================================================================== A variar no programa
+bool 		Focos[] = { 1,1 };		//.. Dois Focos ligados ou desligados
+GLfloat		aberturaFoco = 70.0;		//.. angulo inicial do foco
+GLfloat		anguloINC = 3.0;		//.. incremento
+GLfloat		anguloMIN = 3.0;		//.. minimo
+GLfloat		anguloMAX = 70.0;		//.. maximo
+
+GLfloat Pos1[] = { 0.0f, 5.5f,  5.0f, 1.0f };   // Foco 1 
+GLfloat Pos2[] = { 0.0f, 5.5f,  -5.0f, 1.0f };   // Foco 2 
+
+//============================================================== Malha
+GLint	  dim = 64;   //numero divisoes da grelha
+GLint	  malha = 1;   //Visivel ou inv malha 
 
 //==================================================================== VERTEX ARAY
 //------------------------------------------- coordenadas + normais + cores
@@ -98,7 +120,7 @@ void initTexturas()
 	//-----------------------------------------  asfalto
 	glGenTextures(1, &texture[1]);
 	glBindTexture(GL_TEXTURE_2D, texture[1]);
-	imag.LoadBmpFile("black-road-texture.bmp");
+	imag.LoadBmpFile("semfreio.bmp");//semfreio.bmp
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -165,6 +187,28 @@ void initLights(void) {
 	glLightfv(GL_LIGHT0, GL_SPECULAR, localCorEsp);
 }
 
+void defineLuzes()
+{
+	GLfloat Foco_direccao[] = { 0, -1, 0, 0 };	//��� -Z
+	GLfloat Foco1_cor[] = { 1, 0,  0, 1 };	//��� Cor da luz 1
+	GLfloat Foco2_cor[] = { 0, 1,  0, 1 };	//��� Cor da luz 2
+	GLfloat Foco_Expon = 2.0;		// Foco, SPOT_Exponent
+
+	//�����������������������������������������������Foco Esquerda
+	glLightfv(GL_LIGHT1, GL_POSITION, Pos1);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, Foco1_cor);
+	glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, aberturaFoco);
+	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, Foco_direccao);
+	glLightf(GL_LIGHT1, GL_SPOT_EXPONENT, Foco_Expon);
+
+	//�����������������������������������������������Foco Direita
+	glLightfv(GL_LIGHT2, GL_POSITION, Pos2);
+	glLightfv(GL_LIGHT2, GL_DIFFUSE, Foco2_cor);
+	glLightf(GL_LIGHT2, GL_SPOT_CUTOFF, aberturaFoco);
+	glLightfv(GL_LIGHT2, GL_SPOT_DIRECTION, Foco_direccao);
+	glLightf(GL_LIGHT2, GL_SPOT_EXPONENT, Foco_Expon);
+
+}
 
 void initialize(void)
 {
@@ -178,10 +222,12 @@ void initialize(void)
 	////…………………………………………………………………………………………………………………………… ILUMINACAO / MAteriais
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHT1);
+	glEnable(GL_LIGHT2);
 
 	initLights();
 
-
+	defineLuzes();
 	glEnable(GL_CULL_FACE);		//������������������������������Faces visiveis
 	glCullFace(GL_BACK);		//������������������������������Mostrar so as da frente
 
@@ -213,24 +259,37 @@ void iluminacao() {
 	glLightfv(GL_LIGHT0, GL_AMBIENT, localCorAmb);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, localCorDif);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, localCorEsp);
-	if (ligapontual)
+	if (ligateto)
 		glEnable(GL_LIGHT0);
 	else
 		glDisable(GL_LIGHT0);
 }
 
 void drawChao() {
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Chao y=0
+	glEnable(GL_TEXTURE_2D);
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Chao y=-4
 	glPushMatrix();
-	glNormal3f(0, 1, 0);   // virado para cima
+	float corAmb[] = { 1,1,1,1 };
+	glMaterialfv(GL_FRONT, GL_AMBIENT, corAmb);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, corAmb);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, corAmb);
+
+	glBindTexture(GL_TEXTURE_2D, texture[1]);
+
+	glNormal3f(0, 1, 0);          //normal 
 
 	glBegin(GL_QUADS);
-	glVertex3i(-xC, 0, xC); //A
-	glVertex3i(xC, 0, xC);  //B
-	glVertex3i(xC, 0, -xC); //C
-	glVertex3i(-xC, 0, -xC); //D
+	glTexCoord2f(1.0f, 0.0f);
+	glVertex3i(-xC, -4, xC); //A
+	glTexCoord2f(1.0f, 1.0f);
+	glVertex3i(xC, -4, xC);  //B
+	glTexCoord2f(0.0f, 1.0f);
+	glVertex3i(xC, -4, -xC); //C
+	glTexCoord2f(0.0f, 0.0f);
+	glVertex3i(-xC, -4, -xC); //D
 	glEnd();
 	glPopMatrix();
+	glDisable(GL_TEXTURE_2D);
 
 }
 
@@ -662,34 +721,61 @@ void drawcar() {
 	glGetFloatv(GL_MODELVIEW_MATRIX, &Matriz[0][0]);
 	glDisable(GL_BLEND);
 	glPopMatrix();
+
+
+	glDisable(GL_LIGHTING);
+	glPushMatrix();
+	//�������������������������������Verde
+	if (Focos[0]) {
+		glPushMatrix();
+		glColor3f(1.0f, 0.0f, 0.0f);
+		glTranslatef(Pos1[0], Pos1[1], Pos1[2]);
+		glutSolidSphere(0.1f, 100, 100);
+		glPopMatrix();
+	}
+	//�������������������������������Vermelha
+	if (Focos[1]) {
+		glPushMatrix();
+		glColor3f(0.0f, 1.0f, 0.0f);
+		glTranslatef(Pos2[0], Pos2[1], Pos2[2]);
+		glutSolidSphere(0.1f, 100, 100);
+		glPopMatrix();
+	}
+	glPopMatrix();
+	glEnable(GL_LIGHTING);
+	
 }
 
 void drawmalha() {
 	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_LIGHTING);
+
+	//----------------------------------------------- Luzes
+	defineLuzes();
+
 	//----------------------------------------------- Quadro Material - branco
-	float corAmb[] = { 1,1,1,1 };
+	float corAmb[] = { 0.7,0.7,0.7,1 };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, corAmb);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, corAmb);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, corAmb);
-	//----------------------------------------------- Dsenha malha poligonos
-	//----------------------------------------------- Textura - Alcatrao
+
+	//----------------------------------------------- Textura - caracol
 	glBindTexture(GL_TEXTURE_2D, texture[1]);
 
-	int				i, j;
-	float			med_dim = (float)dim / 2;
+	//----------------------------------------------- Dsenha malha poligonos
 	glPushMatrix();
-	glScalef(40, 1, 40);
-	glTranslatef(0, -4.0, 0);  // meio do poligono 
-
+	glTranslatef(0, -4.0, 0);
 	glRotatef(-90, 1, 0, 0);
-	glTranslatef(-1.0, -1.0, 0);  // meio do poligono 
+	glScalef(50, 50, 50);
 
+	glTranslatef(-1, -1, 0);
 
-	glNormal3f(0, 1, 0);          //normal 
+	glNormal3f(0, 0, 1);          //normal 
 
+	float			med_dim = (float)dim / 2;
 	glBegin(GL_QUADS);
-	for (i = 0; i < dim; i++)
-		for (j = 0; j < dim; j++) {
+	for (int i = 0; i < dim; i++)
+		for (int j = 0; j < dim; j++) {
 			glTexCoord2f((float)j / dim, (float)i / dim);
 			glVertex3d((float)j / med_dim, (float)i / med_dim, 0);
 			glTexCoord2f((float)(j + 1) / dim, (float)i / dim);
@@ -701,7 +787,7 @@ void drawmalha() {
 		}
 	glEnd();
 	glPopMatrix();
-	glDisable(GL_TEXTURE_2D);
+
 }
 
 void updateLuz() {
@@ -737,19 +823,21 @@ void display(void) {
 	gluLookAt(pos[0], pos[1] + 5, pos[2], pos[0], pos[1], pos[2], 0, 0, 1);
 
 	//����������������������������������������������������������Objectos
-	updateLuz();
-	iluminacao();
-	drawEixos();
 	drawcar();
 	if (malha) {
 		drawmalha();
 	}
-	//drawChao();//sem malha ...
+	else {
+		drawChao();
+	}
+	updateLuz();
+	iluminacao();
+	drawEixos();
+	
 	
 	//=======================================================
 
 
-	//glEnable(GL_LIGHTING);
 	//================================================================= Viewport 2
 	glViewport(0, 0, wScreen, hScreen);
 	glMatrixMode(GL_PROJECTION);
@@ -761,20 +849,22 @@ void display(void) {
 
 	//======================================================
 	//  <><><><><><><>         OBSERVADOR NAO EST� FIXO ????
-	gluLookAt(obsP[0], obsP[1], obsP[2], 0, 0, 0, 0, 1, 0);
+	gluLookAt(obsP[0], obsP[1]+10, obsP[2], 0, 0, 0, 0, 1, 0);
+
 	//======================================================
 
 
 	//����������������������������������������������������������Objectos
-	updateLuz();
-	iluminacao();
-	//drawChao();
-	drawEixos();
 	drawcar();
-	drawEsfera();
 	if (malha) {
 		drawmalha();
 	}
+	else {
+		drawChao();
+	}
+	updateLuz();
+	iluminacao();
+	drawEixos();
 	
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Actualizacao
@@ -867,7 +957,7 @@ void keyboard(unsigned char key, int x, int y) {
 		break;
 		//--------------------------- Iluminacaoda sala
 	case 'P': case 'p':
-		ligapontual = !ligapontual;
+		ligateto = !ligateto;
 		iluminacao();
 		glutPostRedisplay();
 		break;
@@ -907,6 +997,34 @@ void keyboard(unsigned char key, int x, int y) {
 	case 'X':
 		dim = 0.5 * dim;
 		if (dim < 1) dim = 1;
+		glutPostRedisplay();
+		break;
+	case '1':
+		Focos[0] = !Focos[0];
+		if (Focos[0] == 0)
+			glDisable(GL_LIGHT1);
+		else
+			glEnable(GL_LIGHT1);
+		glutPostRedisplay();
+		break;
+	case '2':
+		Focos[1] = !Focos[1];
+		if (Focos[1] == 0)
+			glDisable(GL_LIGHT2);
+		else
+			glEnable(GL_LIGHT2);
+		glutPostRedisplay();
+		break;
+	case '9':
+		aberturaFoco = aberturaFoco + anguloINC;
+		if (aberturaFoco > anguloMAX)
+			aberturaFoco = anguloMAX;
+		glutPostRedisplay();
+		break;
+	case '0':
+		aberturaFoco = aberturaFoco - anguloINC;
+		if (aberturaFoco < anguloMIN)
+			aberturaFoco = anguloMIN;
 		glutPostRedisplay();
 		break;
 		//	//--------------------------- MAterial
