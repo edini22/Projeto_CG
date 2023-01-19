@@ -2,6 +2,53 @@
 //Eduardo Figueiredo n-2020213717 
 //===============================================
 
+/*===================TECLAS======================
+====Movimento do carro====
+=='a' rodar com o carro para a esquerda
+=='d' rodar o carro para a direita
+=='w' andar com o carro para frente
+=='s' andar com o carro para retaguarda
+==========================
+==========focos===========
+=='1'ligar/desligar foco1
+=='2'ligar/desligar foco2
+====Movimento dos Focus===
+=='t' movimentar com os focos para a esquerda
+=='u' movimentar com os focos para a direita
+=='6' movimentar com os focos para a frente
+=='y' movimentar com os focos para a retaguarda
+=='4' movimentar focos para cima 
+=='5' movimentar focos para baixo 
+==========================
+===LUZES==================
+=='p' ligar/desligar pontual
+=='l' ligar/desligar ambiente
+=='i' aumentar a intensidade passo 0.1
+=='r' ligar/desligar red da luz
+=='g' ligar/desligar green da luz
+=='b' ligar/desligar blue da luz
+==========================
+===Movimento Vidros=======
+=='k' subir vidros
+=='m' descer vidros
+==========================
+===Movimento Taipal traseiro
+=='j' subir taipal
+=='n' descer taipal
+==========================
+===Malha==================
+=='c' Ligar/Desligar malha 
+=='z' aumenta dimensao dos quadrados da malha
+=='x' diminui dimensao dos quadrados da malha
+==========================
+===Mudar Material ========
+=='h' mudar material do poligono atras da cabine
+==========================
+*/
+
+
+
+
 #include "RgbImage.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -11,19 +58,14 @@
 
 //--------------------------------- Definir cores
 #define BLUE     0.0, 0.0, 1.0, 1.0
-#define YELLOW	 1.0, 1.0, 0.0, 1.0
 #define GREEN    0.0, 1.0, 0.0, 1.0
 #define ORANGE   1.0, 0.5, 0.1, 1.0
-#define CYAN     0.0, 1.0, 1.0, 1.0
 #define WHITE    1.0, 1.0, 1.0, 1.0
 #define BLACK    0.0, 0.0, 0.0, 1.0
-#define GRAY     0.3, 0.3, 0.3, 1.0
 
 //------------------------------------------------------------ Sistema Coordenadas 
 GLint		wScreen = 800, hScreen = 600;		//.. janela - pixeis
 GLfloat		SIZE = 10.0;	//.. Mundo  SIZE=coordenadas x=y=z
-GLfloat     xC = 40.0, yC = 40.0, zC = 40.0;
-
 
 //===========================================================Variaveis e constantes
 
@@ -46,15 +88,13 @@ GLint light = 1;
 GLint rotrodas = 10;
 
 //============================================================== Texturas
-GLUquadricObj* esfera = gluNewQuadric();
-GLuint   texture[5];
+GLuint   texture[4];
 RgbImage imag;
 
 GLfloat Matriz[4][4];
 
-
 //=========================================== Objecto
-GLint     material = 10;
+GLint     material = 1;
 
 //---------------------------------------------------- AMBIENTE - fixa
 GLint   Dia = 0;     //:::   'D'  
@@ -72,25 +112,13 @@ GLfloat localCorDif[4] = { luzR, luzG, luzB, 1.0 };
 GLfloat localCorEsp[4] = { luzR, luzG, luzB, 1.0 };
 GLint ligateto = 1;
 
-//GL_LIGHT1
-GLfloat l1Pos[] = { 0, 10, 0, 1 };
-GLfloat l1Amb[] = { 0, 0., 0, 0 };
-GLfloat l1Dif[] = { 1., 1., 0., 1. };
-GLfloat l1Spec[] = { 0., 1., 0., 1. };
-GLfloat upDownAngle = 0.;
-GLuint n = 30, m = 30;
-GLdouble phase = 0., phaseSpeed = 0.5, w = 1.;
-bool showGrid = false;
-
 //==================================================================== A variar no programa
 bool 		Focos[] = { 1,1 };		//.. Dois Focos ligados ou desligados
 GLfloat		aberturaFoco = 70.0;		//.. angulo inicial do foco
-GLfloat		anguloINC = 3.0;		//.. incremento
-GLfloat		anguloMIN = 3.0;		//.. minimo
-GLfloat		anguloMAX = 70.0;		//.. maximo
 
-GLfloat Pos1[] = { 0.0f, 5.5f,  5.0f, 1.0f };   // Foco 1 
-GLfloat Pos2[] = { 0.0f, 5.5f,  -5.0f, 1.0f };   // Foco 2 
+
+GLfloat Pos1[] = { 0.0f, 10.f,  7.0f, 1.0f };   // Foco 1 
+GLfloat Pos2[] = { 0.0f, 10.f,  -7.0f, 1.0f };   // Foco 2 
 
 //============================================================== Malha
 GLint	  dim = 64;   //numero divisoes da grelha
@@ -102,24 +130,9 @@ GLfloat tam = 1;
 
 void initTexturas()
 {
-
-	//----------------------------------------- Esfera - skybox envolvente
+	//-----------------------------------------  areia
 	glGenTextures(1, &texture[0]);
 	glBindTexture(GL_TEXTURE_2D, texture[0]);
-	imag.LoadBmpFile("sky.bmp");
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3,
-		imag.GetNumCols(),
-		imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
-		imag.ImageData());
-
-	//-----------------------------------------  asfalto
-	glGenTextures(1, &texture[1]);
-	glBindTexture(GL_TEXTURE_2D, texture[1]);
 	imag.LoadBmpFile("semfreio.bmp");//semfreio.bmp
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -131,8 +144,8 @@ void initTexturas()
 		imag.GetNumRows(), 0, GL_RGB, GL_UNSIGNED_BYTE,
 		imag.ImageData());
 	//-----------------------------------------  madeira
-	glGenTextures(1, &texture[2]);
-	glBindTexture(GL_TEXTURE_2D, texture[2]);
+	glGenTextures(1, &texture[1]);
+	glBindTexture(GL_TEXTURE_2D, texture[1]);
 	imag.LoadBmpFile("brown-wooden-flooring.bmp");
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -145,8 +158,8 @@ void initTexturas()
 		imag.ImageData());
 
 	//-----------------------------------------  lateral carro 
-	glGenTextures(1, &texture[3]);
-	glBindTexture(GL_TEXTURE_2D, texture[3]);
+	glGenTextures(1, &texture[2]);
+	glBindTexture(GL_TEXTURE_2D, texture[2]);
 	imag.LoadBmpFile("pintura_azul_chama.bmp");
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -159,8 +172,8 @@ void initTexturas()
 		imag.ImageData());
 
 	//-----------------------------------------  cima/baixo carro 
-	glGenTextures(1, &texture[4]);
-	glBindTexture(GL_TEXTURE_2D, texture[4]);
+	glGenTextures(1, &texture[3]);
+	glBindTexture(GL_TEXTURE_2D, texture[3]);
 	imag.LoadBmpFile("blue-concrete-textured-wall.bmp");
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -274,40 +287,25 @@ void drawChao() {
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, corAmb);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, corAmb);
 
-	glBindTexture(GL_TEXTURE_2D, texture[1]);
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
 
 	glNormal3f(0, 1, 0);          //normal 
 
 	glBegin(GL_QUADS);
 	glTexCoord2f(1.0f, 0.0f);
-	glVertex3i(-xC, -4, xC); //A
+	glVertex3i(-50, -4, 50); //A
 	glTexCoord2f(1.0f, 1.0f);
-	glVertex3i(xC, -4, xC);  //B
+	glVertex3i(50, -4, 50);  //B
 	glTexCoord2f(0.0f, 1.0f);
-	glVertex3i(xC, -4, -xC); //C
+	glVertex3i(50, -4, -50); //C
 	glTexCoord2f(0.0f, 0.0f);
-	glVertex3i(-xC, -4, -xC); //D
+	glVertex3i(-50, -4, -50); //D
 	glEnd();
 	glPopMatrix();
 	glDisable(GL_TEXTURE_2D);
 
 }
 
-void drawEsfera()
-{
-	//------------------------- Esfera
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, texture[0]);
-	glPushMatrix();
-	//glTranslatef(2, 4, 2);
-	glRotatef(-90, 1, 0, 0);
-	gluQuadricDrawStyle(esfera, GLU_FILL);
-	gluQuadricNormals(esfera, GLU_SMOOTH);
-	gluQuadricTexture(esfera, GL_TRUE);
-	gluSphere(esfera, 60.0, 100, 100);
-	glPopMatrix();
-	glDisable(GL_TEXTURE_2D);
-}
 
 void drawcabine() {
 	//face frente
@@ -516,7 +514,7 @@ void drawcar() {
 	glColor3f(0.0745, 0.3176, 0.8471);
 	glPushMatrix();
 	glScalef(8, 2, 4);
-	drawcubotexturas(3);
+	drawcubotexturas(2);
 	glPopMatrix();
 
 	if (light) {
@@ -565,8 +563,29 @@ void drawcar() {
 
 	//habitaculo
 	glPushMatrix();
-	float corHAb[] = { 0.0745, 0.3176, 0.8471,1 };
-
+	float corHAb[] = { 0.0745, 0.3176, 0.8471,1 };//cor de madeira 
+	if (material == 0) {
+	}
+	else if (material == 1) {//esmeralda 
+		corHAb[0] = 0.31;
+		corHAb[1] = 0.78;
+		corHAb[2] = 0.47;
+	}
+	else if (material == 2) {//cor de ouro
+		corHAb[0] = 1;
+		corHAb[1] = 0.84;
+		corHAb[2] = 0;
+	}
+	else if (material == 3) {//cor de rubi
+		corHAb[0] = 0.67;
+		corHAb[1] = 0.27;
+		corHAb[2] = 0.25;
+	}
+	else if (material == 4) {//cor de  tijolo
+		corHAb[0] = 0.75;
+		corHAb[1] = 0.43;
+		corHAb[2] = 0.28;
+	}
 	glMaterialfv(GL_FRONT, GL_AMBIENT, corHAb);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, corHAb);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, corHAb);
@@ -574,7 +593,7 @@ void drawcar() {
 
 	glScalef(1.5, 2, 4);
 
-	drawcubotexturas(4);
+	drawcubotexturas(3);
 	glPopMatrix();
 
 	//cabine vidro DIR
@@ -654,7 +673,7 @@ void drawcar() {
 	glTranslatef(-5, 3, 3.95);
 	glRotatef(90, 0, 1, 0);
 	glScalef(0.1, 1, 3);
-	drawcubotexturas(2);
+	drawcubotexturas(1);
 	glPopMatrix();
 
 	//mala lateral esq 
@@ -663,7 +682,7 @@ void drawcar() {
 	glTranslatef(-5, 3, -3.95);
 	glRotatef(90, 0, 1, 0);
 	glScalef(0.1, 1, 3);
-	drawcubotexturas(2);
+	drawcubotexturas(1);
 	glPopMatrix();
 
 
@@ -675,7 +694,7 @@ void drawcar() {
 	glRotatef(angtap, 0, 0, 1);
 	glTranslatef(0.05, 1, 0);
 	glScalef(0.1, 1, 4);
-	drawcubotexturas(2);
+	drawcubotexturas(1);
 	glPopMatrix();
 
 	//rodas dir frente
@@ -730,7 +749,7 @@ void drawcar() {
 		glPushMatrix();
 		glColor3f(1.0f, 0.0f, 0.0f);
 		glTranslatef(Pos1[0], Pos1[1], Pos1[2]);
-		glutSolidSphere(0.1f, 100, 100);
+		glutSolidSphere(0.3f, 100, 100);
 		glPopMatrix();
 	}
 	//�������������������������������Vermelha
@@ -738,7 +757,7 @@ void drawcar() {
 		glPushMatrix();
 		glColor3f(0.0f, 1.0f, 0.0f);
 		glTranslatef(Pos2[0], Pos2[1], Pos2[2]);
-		glutSolidSphere(0.1f, 100, 100);
+		glutSolidSphere(0.3f, 100, 100);
 		glPopMatrix();
 	}
 	glPopMatrix();
@@ -759,14 +778,14 @@ void drawmalha() {
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, corAmb);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, corAmb);
 
-	//----------------------------------------------- Textura - caracol
-	glBindTexture(GL_TEXTURE_2D, texture[1]);
+	//----------------------------------------------- Textura - areia
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
 
-	//----------------------------------------------- Dsenha malha poligonos
+	//----------------------------------------------- Desenha malha poligonos
 	glPushMatrix();
 	glTranslatef(0, -4.0, 0);
 	glRotatef(-90, 1, 0, 0);
-	glScalef(50, 50, 50);
+	glScalef(50, 50, 1);
 
 	glTranslatef(-1, -1, 0);
 
@@ -812,7 +831,6 @@ void display(void) {
 	//================================================================= APaga 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//glEnable(GL_LIGHTING);
 	//<><><><><><><><><><><><><> Viewport 1 - MAPA   ???
 	glViewport(0, 0, 0.30 * wScreen, 0.30 * hScreen);
 	glMatrixMode(GL_PROJECTION);
@@ -823,13 +841,14 @@ void display(void) {
 	gluLookAt(pos[0], pos[1] + 5, pos[2], pos[0], pos[1], pos[2], 0, 0, 1);
 
 	//����������������������������������������������������������Objectos
-	drawcar();
+	
 	if (malha) {
 		drawmalha();
 	}
 	else {
 		drawChao();
 	}
+	drawcar();
 	updateLuz();
 	iluminacao();
 	drawEixos();
@@ -855,13 +874,13 @@ void display(void) {
 
 
 	//����������������������������������������������������������Objectos
-	drawcar();
 	if (malha) {
 		drawmalha();
 	}
 	else {
 		drawChao();
 	}
+	drawcar();
 	updateLuz();
 	iluminacao();
 	drawEixos();
@@ -877,11 +896,7 @@ void keyboard(unsigned char key, int x, int y) {
 
 	switch (key) {
 
-		/*case 'R': case 'r':
-			sempreRodar = !sempreRodar;
-			glutPostRedisplay();
-			break;*/
-	case 'L':	case 'l':
+	case 'L':	case 'l': // luz ambiente 
 		Dia = !Dia;
 		if (Dia) {
 			luzGlobalCorAmb[0] = 1.0;
@@ -898,17 +913,18 @@ void keyboard(unsigned char key, int x, int y) {
 		break;
 
 		//------------------------------ translacao
-	case 'A': case 'a':
+	case 'A': case 'a': //rodar carro para a esquerda 
 		theta += 3.;
 		glutPostRedisplay();
 		break;
-	case 'D': case 'd':
+	case 'D': case 'd'://rodar carro para a direita
 		theta -= 3.;
 		glutPostRedisplay();
 		break;
-	case 'S': case 's':
+	case 'S': case 's': //andar com o carro de marcha-atras 
 		pos[0] = pos[0] - vel * cos(theta * PI / 180.);
 		pos[2] = pos[2] + vel * sin(theta * PI / 180.);
+
 		if (rotrodas < 360) {
 			rotrodas += 10;
 		}
@@ -917,11 +933,11 @@ void keyboard(unsigned char key, int x, int y) {
 		}
 		printf("coordenadas : %f,%f,%f\n", Matriz[3][0], Matriz[3][1], Matriz[3][2]);
 		glutPostRedisplay();
-		break;
-		//------------------------------ rotacao	
-	case 'W': case 'w':
+		break;	
+	case 'W': case 'w': //andar para frente
 		pos[0] = pos[0] + vel * cos(theta * PI / 180.);
 		pos[2] = pos[2] - vel * sin(theta * PI / 180.);
+
 		if (rotrodas > 0) {
 			rotrodas -= 10;
 		}
@@ -931,75 +947,73 @@ void keyboard(unsigned char key, int x, int y) {
 		printf("coordenadas : %f,%f,%f\n", Matriz[3][0], Matriz[3][1], Matriz[3][2]);
 		glutPostRedisplay();
 		break;
-	case 'M':case 'm':
+	case 'M':case 'm':  //descer vidros
 		if (ywindow > 0) {
 			ywindow -= 0.5;
 			glutPostRedisplay();
 		}
 		break;
-	case 'K':case 'k':
+	case 'K':case 'k':  //subir vidros
 		if (ywindow < 4) {
 			ywindow += 0.5;
 			glutPostRedisplay();
 		}
 		break;
-	case 'J':case 'j':
+	case 'J':case 'j'://subir taipal 
 		if (angtap > 0) {
 			angtap -= 10;
 			glutPostRedisplay();
 		}
 		break;
-	case 'N':case 'n':
+	case 'N':case 'n': //descer taipal 
 		if (angtap < 170) {
 			angtap += 10;
 			glutPostRedisplay();
 		}
 		break;
-		//--------------------------- Iluminacaoda sala
-	case 'P': case 'p':
+		//--------------------------- Iluminacao da sala
+	case 'P': case 'p': 
 		ligateto = !ligateto;
 		iluminacao();
 		glutPostRedisplay();
 		break;
 
-	case 'i': case 'I':
+	case 'i': case 'I': //aumentar intensidade da luz
 		intensidadeT = intensidadeT + 0.1;
 		if (intensidadeT > 1.1) intensidadeT = 0;
 		updateLuz();
 		glutPostRedisplay();
 		break;
-	case 'r':case 'R':
+	case 'r':case 'R': //ligar/desligar luz red
 		luzR = (luzR + 1) % 2;
 		updateLuz();
 		glutPostRedisplay();
 		break;
-	case 'g':case 'G':
+	case 'g':case 'G': //ligar/desligar luz green
 		luzG = (luzG + 1) % 2;
 		updateLuz();
 		glutPostRedisplay();
 		break;
-	case 'b':case 'B':
+	case 'b':case 'B': //ligar/desligar luz blue
 		luzB = (luzB + 1) % 2;
 		updateLuz();
 		glutPostRedisplay();
 		break;
-	case 'C':case 'c':
+	case 'C':case 'c': //ligar/desligar malha
 		malha = !malha;
 		glutPostRedisplay();
 		break;
-	case 'z':
-	case 'Z':
+	case 'z':case 'Z': 
 		dim = 2 * dim;
 		if (dim > 256) dim = 256;
 		glutPostRedisplay();
 		break;
-	case 'x':
-	case 'X':
+	case 'x': case 'X':
 		dim = 0.5 * dim;
 		if (dim < 1) dim = 1;
 		glutPostRedisplay();
 		break;
-	case '1':
+	case '1':  //liga/desliga foco1
 		Focos[0] = !Focos[0];
 		if (Focos[0] == 0)
 			glDisable(GL_LIGHT1);
@@ -1007,7 +1021,7 @@ void keyboard(unsigned char key, int x, int y) {
 			glEnable(GL_LIGHT1);
 		glutPostRedisplay();
 		break;
-	case '2':
+	case '2': //liga/desliga foco2
 		Focos[1] = !Focos[1];
 		if (Focos[1] == 0)
 			glDisable(GL_LIGHT2);
@@ -1015,25 +1029,44 @@ void keyboard(unsigned char key, int x, int y) {
 			glEnable(GL_LIGHT2);
 		glutPostRedisplay();
 		break;
-	case '9':
-		aberturaFoco = aberturaFoco + anguloINC;
-		if (aberturaFoco > anguloMAX)
-			aberturaFoco = anguloMAX;
-		glutPostRedisplay();
-		break;
-	case '0':
-		aberturaFoco = aberturaFoco - anguloINC;
-		if (aberturaFoco < anguloMIN)
-			aberturaFoco = anguloMIN;
-		glutPostRedisplay();
-		break;
-		//	//--------------------------- MAterial
-		//case 'H': case 'h':
-		//	material = (material + 1) % 18;
-		//	initMaterials(material);
-		//	glutPostRedisplay();
-		//	break;
 
+			//--------------------------- MAterial
+	case 'H': case 'h':
+		material = (material + 1) % 5;
+		glutPostRedisplay();
+		break;
+
+		//-------------------------------- FOCUS
+	case 'U': case 'u'://direita focus
+		Pos1[2] = Pos1[2] + 2;
+		Pos2[2] = Pos2[2] + 2;
+		glutPostRedisplay();
+		break;
+	case '6'://frente com focus 
+		Pos1[0] = Pos1[0] + 2;
+		Pos2[0] = Pos2[0] + 2;
+		glutPostRedisplay();
+		break;
+	case 'T': case 't': //esquerda com focus
+		Pos1[2] = Pos1[2] - 2;
+		Pos2[2] = Pos2[2] - 2;
+		glutPostRedisplay();
+		break;
+	case 'Y': case 'y'://tras focus
+		Pos1[0] = Pos1[0] - 2;
+		Pos2[0] = Pos2[0] - 2;
+		glutPostRedisplay();
+		break;
+	case '4'://tras focus
+		Pos1[1] = Pos1[1] + 2;
+		Pos2[1] = Pos2[1] + 2;
+		glutPostRedisplay();
+		break;
+	case '5'://tras focus
+		Pos1[1] = Pos1[1] - 2;
+		Pos2[1] = Pos2[1] - 2;
+		glutPostRedisplay();
+		break;
 	case 27:
 		exit(0);
 		break;
@@ -1078,8 +1111,8 @@ int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	glutInitWindowSize(wScreen, hScreen);
-	glutInitWindowPosition(400, 100);
-	glutCreateWindow("efigueiredo@student.dei.uc.pt  ------  |Observador:'SETAS'|  |carro- �r�, 'w/s' 'a/d'| |vidros 'm/k'| |mala 'n/j'| ");
+	glutInitWindowPosition(400, 100); 
+	glutCreateWindow("|Observador:'SETAS'|  |carro- �r�, 'w/s' 'a/d'| |vidros 'm/k'| |mala 'n/j'| |luzes :'i/r/g/b' 'p/l' focos '1'|'2' '6/t/y/u'| |material 'h'| |malha 'c'|");
 
 	initialize();
 
